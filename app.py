@@ -1,4 +1,6 @@
 # Dependencies
+import numpy as np
+
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
@@ -8,13 +10,13 @@ from flask import Flask, jsonify
 
 
 # Database Setup
-engine = create_engine('sql data goes here')
+engine = create_engine('sqlite:///hawaii.sqlite', echo=False)
 
 Base = automap_base()
 Base.prepare(engine, reflect=True)
 
-Measurement = Base.classes.measurements
-Station = Base.classes.stations
+Measurement = Base.classes.measurement
+Station = Base.classes.station
 
 
 # Flask Setup
@@ -27,11 +29,11 @@ def homepage():
     return(
         f'Welcome!<br/>'
         f'Available Routes:<br/>'
-        f'/api/v1.0/precipitation'
-        f'/api/v1.0/stations'
-        f'/api/v1.0/tobs'
-        f'/api/v1.0/<start>'
-        f'/api/v1.0/<start>/<end>'
+        f'/api/v1.0/precipitation<br/>'
+        f'/api/v1.0/stations<br/>'
+        f'/api/v1.0/tobs<br/>'
+        f'/api/v1.0/<start><br/>'
+        f'/api/v1.0/<start>/<end><br/>'
     )
 
 @app.route('/api/v1.0/precipitation')
@@ -44,8 +46,7 @@ def precipitation():
     all_prcp = []
     for date, precip in results:
         prcp_dict = {}
-        prcp_dict['date'] = date
-        prcp_dict['precip'] = precip
+        prcp_dict[date] = precip
         all_prcp.append(prcp_dict)
 
     return jsonify(all_prcp)
@@ -58,22 +59,24 @@ def stations():
     results = session.query(Station.station).all()
     session.close()
 
-    all_stations = list()
+    all_stations = list(np.ravel(results))
 
-    return jsonify()
-    #return list of stations
-    #jsonify
+    return jsonify(all_stations)
 
-
+'''
 @app.route('/api/v1.0/tobs')
 def temperature():
 
     session = Session(engine)
-    results = session.query().all()
+    results = session.query(Measurement.date, Measurement.tobs).all()
     session.close()
 
+    all_temps = []
+    for date, temp in results:
+        temp_dict = {}
+
     return jsonify()
-    #return query results of 'date' and 'tobs' ast dict
+    #return query results of 'date' and 'tobs' as dict
     #jsonify
 
 
@@ -90,7 +93,7 @@ def temp2():
     session = Session(engine)
     results = session.query().all()
     session.close()
+'''
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)
