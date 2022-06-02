@@ -1,5 +1,6 @@
 # Dependencies
 import numpy as np
+import datetime as dt
 
 import sqlalchemy
 from sqlalchemy.ext.automap import automap_base
@@ -51,7 +52,6 @@ def precipitation():
 
     return jsonify(all_prcp)
 
-
 @app.route('/api/v1.0/stations')
 def stations():
 
@@ -63,37 +63,46 @@ def stations():
 
     return jsonify(all_stations)
 
-'''
 @app.route('/api/v1.0/tobs')
 def temperature():
 
     session = Session(engine)
-    results = session.query(Measurement.date, Measurement.tobs).all()
+    results = session.query(Measurement.date, Measurement.tobs).\
+        filter((Measurement.date <= '2017-08-23') & (Measurement.date >= '2016-08-23')).all()
     session.close()
 
-    all_temps = []
-    for date, temp in results:
-        temp_dict = {}
+    all_temps = list(np.ravel(results))
 
-    return jsonify()
-    #return query results of 'date' and 'tobs' as dict
-    #jsonify
-
+    return jsonify(all_temps)
 
 @app.route('/api/v1.0/<start>')
-def temp1():
+def start(startdate):
+
+    startdate = dt.date.strftime('%Y%m%d')
 
     session = Session(engine)
-    results = session.query().all()
+    results = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
+        filter(Measurement.date >= startdate).all()
     session.close()
+
+    st_temp = list(np.ravel(results))
+    return jsonify(st_temp)
+
 
 @app.route('/api/v1.0/<start>/<end>')
-def temp2():
+def startend(startdate, enddate):
+
+    startdate = dt.date.strftime('%Y%m%d')
+    enddate = dt.date.strftime('%Y%m%d')
 
     session = Session(engine)
-    results = session.query().all()
+    results = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
+        filter((Measurement.date >= startdate) & (Measurement.date <= enddate)).all()
     session.close()
-'''
+
+    sted_temp = list(np.ravel(results))
+    return jsonify(sted_temp)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
